@@ -466,14 +466,6 @@
 
 </main>
 
-<div id="admin-info">
-  <div>
-    This is a public, multi-user workspace. Your unique User ID is:
-    <br/>
-    <strong id="userIdDisplay" class="text-white">Loading...</strong>
-  </div>
-</div>
-
 <!-- Sticky bottom cart -->
 <div class="sticky">
   <div class="cartbar">
@@ -582,51 +574,7 @@
   <div><strong>Note:</strong> We never ask for passwords. Orders processed manually. Refunds per policy.</div>
 </footer>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, doc, addDoc, onSnapshot, collection, query, limit, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-  import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-  // Set Firestore log level to debug
-  setLogLevel('debug');
-
-  // Firebase Initialization and Auth
-  const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-  const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-  let db;
-  let auth;
-  let userId;
-  let unsubscribeOrders;
-
-  // Initialize Firebase and Auth
-  const app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  auth = getAuth(app);
-
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      userId = user.uid;
-      document.getElementById('userIdDisplay').textContent = userId;
-      console.log('User signed in with UID:', userId);
-      // Start listening to orders once authenticated
-      setupOrderListener();
-    } else {
-      console.log('User is signed out, signing in anonymously...');
-      try {
-        if (initialAuthToken) {
-          await signInWithCustomToken(auth, initialAuthToken);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (error) {
-        console.error("Error during anonymous sign-in:", error);
-      }
-    }
-  });
-
+<script>
   /* ====== Sample products ======
     id, name, diamonds, price (INR), oldPrice, image
   */
@@ -735,7 +683,7 @@
   }
 
   /* Checkout -> show UPI modal */
-  window.proceedToPayment = async function() {
+  window.proceedToPayment = function() {
     const uid = document.getElementById('inputUID').value.trim();
     const contact = document.getElementById('inputContact').value.trim();
     let hasError = false;
@@ -756,9 +704,10 @@
 
     if (hasError) return;
     
-    // prepare order object
+    // prepare order object and save to local storage
     const payable = selected.price * qty;
     const orderData = {
+      id: 'ORD' + Date.now(),
       product: selected,
       qty,
       payable,
@@ -766,24 +715,15 @@
       contact,
       coupon: document.getElementById('inputCoupon').value.trim(),
       time: new Date(),
-      status: 'pending',
-      userId: userId,
-      proof: null
+      status: 'pending'
     };
+    
+    let orders = JSON.parse(localStorage.getItem('dt_orders') || '[]');
+    orders.push(orderData);
+    localStorage.setItem('dt_orders', JSON.stringify(orders));
 
-    // Save order to Firestore
-    try {
-      const ordersCol = collection(db, `artifacts/${appId}/public/data/orders`);
-      const newOrderRef = await addDoc(ordersCol, orderData);
-      currentOrder = { id: newOrderRef.id, ...orderData };
-      console.log("Order saved to Firestore with ID:", currentOrder.id);
-    } catch (e) {
-      console.error("Error adding document: ", e);
-      // Use the celebration modal for a better UX
-      showMessage(`Error saving order. Please try again.`);
-      return;
-    }
-
+    currentOrder = orderData;
+    
     // Show UPI modal with details
     document.getElementById('payAmount').textContent = '₹' + payable;
     const note = currentOrder.id;
@@ -792,7 +732,7 @@
     document.getElementById('uploadPreview').innerHTML = '';
     document.getElementById('upiError').textContent = '';
 
-    // Show UPI modal
+    renderOrderList();
     document.getElementById('upiBack').style.display = 'flex';
   }
 
@@ -800,7 +740,7 @@
   window.closeUpi = function(){ document.getElementById('upiBack').style.display='none' }
   
   /* Confirm manual payment: user uploads screenshot and clicks confirm */
-  window.confirmManualPayment = async function() {
+  window.confirmManualPayment = function() {
     const file = document.getElementById('upiScreenshot').files[0];
     if (!file) {
       document.getElementById('upiError').textContent = 'Please upload a UPI screenshot.';
@@ -808,59 +748,30 @@
     }
 
     const reader = new FileReader();
-    reader.onload = async function(e) {
+    reader.onload = function(e) {
       const proofBase64 = e.target.result;
       if (!currentOrder) {
-        // Use the celebration modal for a better UX
-        showCelebrationModal("Order information is missing. Please create a new order.");
+        showCelebrationModal();
         closeUpi();
         return;
       }
       
-      const orderRef = doc(db, `artifacts/${appId}/public/data/orders`, currentOrder.id);
+      let orders = JSON.parse(localStorage.getItem('dt_orders') || '[]');
+      orders = orders.map(o => o.id === currentOrder.id ? { ...o, status: 'paid-pending', proof: proofBase64 } : o);
+      localStorage.setItem('dt_orders', JSON.stringify(orders));
+      
+      closeUpi();
+      closeModal();
+      showCelebrationModal();
 
-      try {
-        await addDoc(collection(db, `artifacts/${appId}/public/data/paymentProofs`), {
-          orderId: currentOrder.id,
-          proof: proofBase64,
-          time: new Date(),
-          userId: userId,
-        });
-        
-        closeUpi();
-        closeModal();
-        showCelebrationModal();
-
-      } catch (e) {
-        console.error("Error submitting payment proof: ", e);
-        // Use the celebration modal for a better UX
-        showCelebrationModal("Error submitting payment. Please try again.");
-      }
+      renderOrderList();
     };
     reader.readAsDataURL(file);
   }
 
-  /* Listen for real-time order updates */
-  function setupOrderListener() {
-    if (unsubscribeOrders) {
-      unsubscribeOrders();
-    }
-    const ordersCol = collection(db, `artifacts/${appId}/public/data/orders`);
-    const q = query(ordersCol, orderBy("time", "desc"), limit(6));
-    
-    unsubscribeOrders = onSnapshot(q, (querySnapshot) => {
-      const orders = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        orders.push({ id: doc.id, ...data });
-      });
-      renderOrderList(orders);
-    }, (error) => {
-      console.error("Error listening to orders:", error);
-    });
-  }
-
-  function renderOrderList(orders) {
+  /* Render orders from local storage */
+  function renderOrderList() {
+    const orders = JSON.parse(localStorage.getItem('dt_orders') || '[]').slice(-6).reverse();
     const el = document.getElementById('orderList');
     if (orders.length === 0) {
       el.innerHTML = 'No recent orders.';
@@ -870,8 +781,7 @@
       <div class="mb-2 p-2 rounded-lg bg-gray-800">
         <div class="font-bold text-white">${o.id}</div>
         <div class="text-sm muted">${o.product.name} x${o.qty} — ₹${o.payable}</div>
-        <div class="text-xs muted">UID: ${o.uid} | by ${o.userId}</div>
-        <div class="text-xs muted">${o.time.toDate().toLocaleString()}</div>
+        <div class="text-xs muted">${new Date(o.time).toLocaleString()}</div>
       </div>
     `).join('');
   }
@@ -881,6 +791,7 @@
     if (selected) showModal();
   });
   updateCartBar();
+  renderOrderList();
 </script>
 </body>
 </html>
