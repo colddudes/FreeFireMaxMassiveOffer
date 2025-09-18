@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DiamondTop 💎 — Free Fire Top-up (MVP)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1220;
+    --card: #0f1726;
+    --muted: #9fb3d6;
+    --accent: #ffb400;
+    --accent-dark: #ef9a00;
+    --white: #f8fafc;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, Roboto, Arial, sans-serif;
+    background: linear-gradient(180deg, #071026, #061426);
+    color: var(--white);
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: #07090b;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .logo {
+    font-weight: 800;
+    color: var(--accent);
+    font-size: 20px;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 0 14px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: linear-gradient(180deg, #0d1726, #071025);
+    border-radius: 10px;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: transform 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .card:hover {
+    transform: translateY(-5px);
+  }
+  .card .content {
+    position: relative;
+    z-index: 2;
+  }
+  .card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  .title {
+    margin: 8px 0;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .price {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sale {
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 16px;
+  }
+  .old {
+    color: var(--muted);
+    text-decoration: line-through;
+    font-size: 12px;
+  }
+  .badge {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    background: var(--accent-dark);
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    z-index: 3; /* Ensure badge is on top */
+  }
+  .cta {
+    margin-top: 10px;
+    background: var(--accent);
+    color: #000;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    width: 100%;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  }
+  .cta:hover {
+    transform: scale(1.02);
+    background-color: var(--accent-dark);
+  }
+  /* sticky bottom cart */
+  .sticky {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 10px;
+    display: flex;
+    justify-content: center;
+    padding: 0 12px;
+    z-index: 60;
+  }
+  .cartbar {
+    max-width: 1100px;
+    background: linear-gradient(180deg, #071026, #071026);
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    width: 100%;
+  }
+  .cart-info {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .cart-btn {
+    background: var(--accent);
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .cart-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  /* modal */
+  .modal-back {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal {
+    width: 100%;
+    max-width: 520px;
+    background: #071026;
+    padding: 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: transparent;
+    color: var(--white);
+    margin-top: 6px;
+  }
+  .small {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .upload-preview {
+    margin-top: 8px;
+  }
+  .tx-list {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  footer {
+    max-width: 1100px;
+    margin: 30px auto;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 0 14px;
+  }
+  .error-message {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  #admin-info {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px;
+    background-color: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.03);
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Make overlay non-interactive */
+  }
+  .card-overlay img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    opacity: 0.6;
+    transition: transform 0.2s ease-in-out;
+  }
+  .card:hover .card-overlay img {
+    transform: scale(1.1);
+  }
+  /* New styles for background image */
+  .card-bg-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('https://i.ibb.co/MxDpYK9t/Screenshot-2025-09-18-224306.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.6;
+      z-index: 1;
+      transform: scale(1.1); /* Slightly zoomed in */
+  }
+  .card:hover .card-bg-image {
+      transform: scale(1.2);
+  }
+  /* Celebration animation */
+  .celebration-modal {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 101;
+    text-align: center;
+    display: none;
+  }
+  .celebration-modal .title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    animation: pulse 1s infinite;
+  }
+  .celebration-modal .message {
+    font-size: 1.25rem;
+    color: var(--white);
+    margin-bottom: 2rem;
+  }
+  .celebration-effect {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .diamond {
+    position: absolute;
+    color: var(--accent);
+    font-size: 2rem;
+    animation: fall linear infinite;
+  }
+  @keyframes fall {
+    0% {
+      transform: translateY(-100px) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  @media (max-width: 480px) {
+    .card img {
+      height: 100px;
+    }
+    .modal {
+      margin: 12px;
+    }
+    .cartbar {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .review-card {
+    background-color: var(--card);
+    padding: 16px;
+    border-radius: 10px;
+  }
+  .review-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .review-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .review-name {
+    font-weight: 700;
+  }
+  .review-text {
+    font-size: 14px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">DiamondTop 💎</div>
+  <div style="flex:1"></div>
+  <div class="muted small">Trusted • Fast • India (INR)</div>
+</header>
+
+<main class="container">
+  <section style="margin-bottom:14px">
+    <h2 style="margin:0 0 6px">Free Fire Top-up 💎 — Packs</h2>
+    <div class="small muted">Choose your pack. Prices shown in ₹ (INR) — discounts applied.</div>
+  </section>
+
+  <section class="grid" id="productGrid">
+    <!-- JS will render product cards here -->
+  </section>
+
+  <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:24px 0" />
+
+  <section id="about-section">
+    <h2 style="font-weight:800;font-size:20px;margin:24px 0 12px">About Free Fire</h2>
+    <p class="muted" style="margin-bottom:12px">
+      Garena Free Fire is a popular mobile battle royale game where 50 players parachute onto a remote island and scavenge for weapons and equipment to defeat other players. The last one standing wins. The game is known for its fast-paced action, intense combat, and engaging gameplay.
+    </p>
+    <h3 style="font-weight:700;font-size:18px;margin:18px 0 12px">What are Free Fire Diamonds?</h3>
+    <p class="muted">
+      Free Fire Diamonds are the premium in-game currency that allows you to purchase various items like character bundles, weapon skins, pets, and the Elite Pass. They are essential for unlocking exclusive content and enhancing your gameplay experience. Top-up services like DiamondTop make it easy and safe to get your diamonds instantly.
+    </p>
+  </section>
+
+  <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:24px 0" />
+
+  <section id="reviews-section">
+    <h2 style="font-weight:800;font-size:20px;margin:24px 0 12px">Customer Reviews</h2>
+    <div class="review-grid">
+      <div class="review-card">
+        <div class="review-header">
+          <img class="review-avatar" src="https://placehold.co/40x40/007bff/fff?text=R" alt="Reviewer Avatar" />
+          <div>
+            <div class="review-name">Rahul S.</div>
+            <div class="small text-yellow-400">★★★★★</div>
+          </div>
+        </div>
+        <div class="review-text">"Super fast service! Got my diamonds in just a few minutes. Highly recommended for all Free Fire players."</div>
+      </div>
+      <div class="review-card">
+        <div class="review-header">
+          <img class="review-avatar" src="https://placehold.co/40x40/28a745/fff?text=P" alt="Reviewer Avatar" />
+          <div>
+            <div class="review-name">Priya M.</div>
+            <div class="small text-yellow-400">★★★★★</div>
+          </div>
+        </div>
+        <div class="review-text">"I was a bit skeptical at first, but this site is 100% genuine. The manual UPI process was smooth and simple. Great job!"</div>
+      </div>
+      <div class="review-card">
+        <div class="review-header">
+          <img class="review-avatar" src="https://placehold.co/40x40/dc3545/fff?text=A" alt="Reviewer Avatar" />
+          <div>
+            <div class="review-name">Arjun D.</div>
+            <div class="small text-yellow-400">★★★★★</div>
+          </div>
+        </div>
+        <div class="review-text">"Affordable prices and quick delivery. I always come here for my diamond top-ups now. Thanks, DiamondTop!"</div>
+      </div>
+      <div class="review-card">
+        <div class="review-header">
+          <img class="review-avatar" src="https://placehold.co/40x40/ffc107/000?text=S" alt="Reviewer Avatar" />
+          <div>
+            <div class="review-name">Suresh K.</div>
+            <div class="small text-yellow-400">★★★★★</div>
+          </div>
+        </div>
+        <div class="review-text">"Very easy to use. No need to log in or give my password. The diamonds were credited to my account in no time."</div>
+      </div>
+      <div class="review-card">
+        <div class="review-header">
+          <img class="review-avatar" src="https://placehold.co/40x40/17a2b8/fff?text=M" alt="Reviewer Avatar" />
+          <div>
+            <div class="review-name">Meera J.</div>
+            <div class="small text-yellow-400">★★★★★</div>
+          </div>
+        </div>
+        <div class="review-text">"I love that I can see my order on the public list. It gives me confidence that everything is being handled transparently. Awesome work!"</div>
+      </div>
+    </div>
+  </section>
+
+  <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:24px 0" />
+
+</main>
+
+<div id="admin-info">
+  <div>
+    This is a public, multi-user workspace. Your unique User ID is:
+    <br/>
+    <strong id="userIdDisplay" class="text-white">Loading...</strong>
+  </div>
+</div>
+
+<!-- Sticky bottom cart -->
+<div class="sticky">
+  <div class="cartbar">
+    <div>
+      <div style="font-weight:700" id="cartSummary">No pack selected</div>
+      <div class="cart-info">Player UID required at checkout</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="cart-btn" id="openCheckout" disabled>Top-up Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Product detail / Checkout flow -->
+<div class="modal-back" id="modalBack">
+  <div class="modal" id="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:800;font-size:16px" id="modalTitle">Pack</div>
+      <button onclick="closeModal()" style="background:transparent;border:none;color:var(--muted);cursor:pointer">✕</button>
+    </div>
+    <div style="margin-top:8px" id="modalImageContainer"></div>
+    <div style="display:flex;gap:12px;margin-top:10px;align-items:center">
+      <div style="font-weight:800" id="modalPrice">₹0</div>
+      <div class="muted" id="modalOldPrice">₹0</div>
+    </div>
+
+    <label>Quantity</label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="changeQty(-1)" style="padding:8px 10px;border:none;border-radius:8px;background:#0b1626;color:var(--white);cursor:pointer">-</button>
+      <div id="qty" style="min-width:28px;text-align:center">1</div>
+      <button onclick="changeQty(1)" style="padding:8px 10px;border:none;border-radius:8px;background:#0b1626;color:var(--white);cursor:pointer">+</button>
+    </div>
+
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0" />
+
+    <label>Player UID (required)</label>
+    <input id="inputUID" placeholder="Enter Player UID (no password)" />
+    <span id="uidError" class="error-message"></span>
+
+    <label>Server</label>
+    <select id="inputServer">
+      <option value="IN">India</option>
+      <option value="AS">Asia</option>
+      <option value="EU">Europe</option>
+    </select>
+
+    <label>Contact (phone or email)</label>
+    <input id="inputContact" placeholder="Phone or email for updates" />
+    <span id="contactError" class="error-message"></span>
+
+    <label>Coupon (optional)</label>
+    <input id="inputCoupon" placeholder="FIRST10" />
+
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="cta" onclick="proceedToPayment()">Pay via UPI (Manual)</button>
+    </div>
+
+    <div id="orderMsg" class="muted small" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- Modal: UPI payment -->
+<div class="modal-back" id="upiBack">
+  <div class="modal" id="upiModal">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:800;font-size:16px">Pay via UPI (Manual)</div>
+      <button onclick="closeUpi()" style="background:transparent;border:none;color:var(--muted);cursor:pointer">✕</button>
+    </div>
+    <div style="margin-top:10px">
+      <div class="small muted">Send UPI payment to the ID below. <strong>Important:</strong> add the <span id="orderNoteText" style="color:var(--accent)"></span> in the UPI note/memo so we can verify automatically.</div>
+      <div style="display:flex;flex-direction: column;gap:12px;align-items:center;margin-top:12px">
+        <div style="width:120px;height:120px;background:linear-gradient(180deg,#071026,#071026);display:flex;align-items:center;justify-content:center;border-radius:8px;border:1px dashed rgba(255,255,255,0.04)">
+          <img id="qrImg" src="https://i.ibb.co/Rq1ymhz/photo-6224310191147566841-y.jpg" alt="UPI QR" style="max-width:100%;max-height:100%;" />
+        </div>
+        <div class="text-center">
+          <div class="small muted">Amount to pay: <span id="payAmount" style="font-weight:800"></span></div>
+        </div>
+      </div>
+      <label style="margin-top:12px">Upload UPI screenshot (required)</label>
+      <input type="file" accept="image/*" id="upiScreenshot" />
+      <div class="upload-preview" id="uploadPreview"></div>
+      <div id="upiError" class="error-message"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="cta" onclick="confirmManualPayment()">I have paid — Submit screenshot</button>
+      </div>
+      <div class="tx-list" id="lastOrders" style="margin-top:14px">
+        <h3>Recent Orders (Admin View)</h3>
+        <div id="orderList">No recent orders.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Celebration Modal -->
+<div class="celebration-modal" id="celebrationModal">
+  <div class="celebration-effect" id="diamond-fall"></div>
+  <div class="modal">
+    <div class="title">🎉 Congratulations! 🎉</div>
+    <div class="message">Your payment has been successfully submitted. We will process your top-up shortly.</div>
+    <div class="message">Thank you for your order!</div>
+    <button onclick="closeCelebrationModal()" class="cta mt-4 mx-auto block">OK</button>
+  </div>
+</div>
+
+<footer>
+  <div><strong>Note:</strong> We never ask for passwords. Orders processed manually. Refunds per policy.</div>
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { getFirestore, doc, addDoc, onSnapshot, collection, query, limit, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+  // Set Firestore log level to debug
+  setLogLevel('debug');
+
+  // Firebase Initialization and Auth
+  const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+  const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+  let db;
+  let auth;
+  let userId;
+  let unsubscribeOrders;
+
+  // Initialize Firebase and Auth
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  auth = getAuth(app);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      userId = user.uid;
+      document.getElementById('userIdDisplay').textContent = userId;
+      console.log('User signed in with UID:', userId);
+      // Start listening to orders once authenticated
+      setupOrderListener();
+    } else {
+      console.log('User is signed out, signing in anonymously...');
+      try {
+        if (initialAuthToken) {
+          await signInWithCustomToken(auth, initialAuthToken);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (error) {
+        console.error("Error during anonymous sign-in:", error);
+      }
+    }
+  });
+
+  /* ====== Sample products ======
+    id, name, diamonds, price (INR), oldPrice, image
+  */
+  const PRODUCTS = [
+    {id:'p1',name:'250 Diamonds 💎',diamonds:250,price:100,old:120,image:'https://placehold.co/400x240/0d1726/ffb400?text=250'},
+    {id:'p2',name:'350 Diamonds 💎',diamonds:350,price:150,old:180,image:'https://placehold.co/400x240/0d1726/ffb400?text=350'},
+    {id:'p3',name:'500 Diamonds 💎',diamonds:500,price:249,old:299,image:'https://placehold.co/400x240/0d1726/ffb400?text=500'},
+    {id:'p4',name:'800 Diamonds 💎',diamonds:800,price:400,old:480,image:'https://placehold.co/400x240/0d1726/ffb400?text=800'},
+    {id:'p5',name:'1161 Diamonds 💎',diamonds:1161,price:600,old:700,image:'https://placehold.co/400x240/0d1726/ffb400?text=1161'},
+  ];
+
+  let selected = null;
+  let qty = 1;
+  const UPI_ID = 'yourupi@bank'; // CHANGE this to your UPI id
+  const UPI_QR = ''; // optional: paste URL to QR image (png) else leave blank
+  let currentOrder = null;
+
+  /* Render products */
+  const grid = document.getElementById('productGrid');
+  function renderProducts(){
+    grid.innerHTML = '';
+    PRODUCTS.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'card cursor-pointer';
+      div.setAttribute('onclick', `openProduct('${p.id}')`);
+      div.innerHTML = `
+        ${savingsBadge(p)}
+        <div class="card-bg-image"></div>
+        <div class="content">
+          <img src="${p.image}" alt="${p.name}" />
+          <div class="title">${p.name}</div>
+          <div class="price">
+            <div class="sale">₹${p.price}</div>
+            <div class="old">₹${p.old}</div>
+          </div>
+          <button class="cta" onclick="event.stopPropagation(); openProduct('${p.id}')">Top-up Now</button>
+        </div>
+      `;
+      grid.appendChild(div);
+    });
+  }
+  function savingsBadge(p){
+    const s = Math.max(0, p.old - p.price);
+    if(s <= 0) return '';
+    const percentage = ((p.old - p.price) / p.old) * 100;
+    return `<div class="badge">Save ${Math.round(percentage)}%</div>`;
+  }
+  renderProducts();
+
+  /* Open product modal */
+  window.openProduct = function(id) {
+    selected = PRODUCTS.find(x => x.id === id);
+    if (!selected) return;
+    qty = 1;
+    document.getElementById('modalTitle').textContent = `${selected.name}`;
+    document.getElementById('modalImageContainer').innerHTML = `<img src="${selected.image}" style="width:100%;height:160px;object-fit:cover;border-radius:6px" />`;
+    document.getElementById('modalPrice').textContent = `₹${selected.price}`;
+    document.getElementById('modalOldPrice').textContent = `₹${selected.old}`;
+    document.getElementById('qty').textContent = qty;
+    document.getElementById('inputUID').value = '';
+    document.getElementById('inputContact').value = '';
+    document.getElementById('inputCoupon').value = '';
+    document.getElementById('uidError').textContent = '';
+    document.getElementById('contactError').textContent = '';
+    document.getElementById('orderMsg').textContent = '';
+    showModal();
+    updateCartBar();
+  }
+
+  /* Modal controls */
+  function showModal(){ document.getElementById('modalBack').style.display='flex' }
+  window.closeModal = function(){ document.getElementById('modalBack').style.display='none' }
+  window.changeQty = function(d){ qty = Math.max(1, qty + d); document.getElementById('qty').textContent = qty; updateCartBar() }
+  
+  /* Show celebration modal */
+  function showCelebrationModal() {
+    document.getElementById('celebrationModal').style.display = 'flex';
+    // Create falling diamonds
+    const container = document.getElementById('diamond-fall');
+    for (let i = 0; i < 50; i++) {
+      const diamond = document.createElement('div');
+      diamond.className = 'diamond';
+      diamond.textContent = '💎';
+      diamond.style.left = `${Math.random() * 100}vw`;
+      diamond.style.animationDelay = `${Math.random() * 2}s`;
+      diamond.style.animationDuration = `${Math.random() * 3 + 2}s`;
+      container.appendChild(diamond);
+    }
+  }
+  window.closeCelebrationModal = function() {
+    document.getElementById('celebrationModal').style.display = 'none';
+    const container = document.getElementById('diamond-fall');
+    container.innerHTML = '';
+  }
+
+  /* Update sticky cart summary */
+  function updateCartBar(){
+    if(!selected){
+      document.getElementById('cartSummary').textContent='No pack selected';
+      document.getElementById('openCheckout').disabled=true;
+      return;
+    }
+    const total = selected.price * qty;
+    document.getElementById('cartSummary').textContent = `${selected.name} x${qty} — ₹${total}`;
+    document.getElementById('openCheckout').disabled = false;
+  }
+
+  /* Checkout -> show UPI modal */
+  window.proceedToPayment = async function() {
+    const uid = document.getElementById('inputUID').value.trim();
+    const contact = document.getElementById('inputContact').value.trim();
+    let hasError = false;
+
+    if (!uid) {
+      document.getElementById('uidError').textContent = 'Player UID is required.';
+      hasError = true;
+    } else {
+      document.getElementById('uidError').textContent = '';
+    }
+
+    if (!contact) {
+      document.getElementById('contactError').textContent = 'Contact is required.';
+      hasError = true;
+    } else {
+      document.getElementById('contactError').textContent = '';
+    }
+
+    if (hasError) return;
+    
+    // prepare order object
+    const payable = selected.price * qty;
+    const orderData = {
+      product: selected,
+      qty,
+      payable,
+      uid,
+      contact,
+      coupon: document.getElementById('inputCoupon').value.trim(),
+      time: new Date(),
+      status: 'pending',
+      userId: userId,
+      proof: null
+    };
+
+    // Save order to Firestore
+    try {
+      const ordersCol = collection(db, `artifacts/${appId}/public/data/orders`);
+      const newOrderRef = await addDoc(ordersCol, orderData);
+      currentOrder = { id: newOrderRef.id, ...orderData };
+      console.log("Order saved to Firestore with ID:", currentOrder.id);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+      // Use the celebration modal for a better UX
+      showMessage(`Error saving order. Please try again.`);
+      return;
+    }
+
+    // Show UPI modal with details
+    document.getElementById('payAmount').textContent = '₹' + payable;
+    const note = currentOrder.id;
+    document.getElementById('orderNoteText').textContent = `Order:${note}`;
+    document.getElementById('upiScreenshot').value = null;
+    document.getElementById('uploadPreview').innerHTML = '';
+    document.getElementById('upiError').textContent = '';
+
+    // Show UPI modal
+    document.getElementById('upiBack').style.display = 'flex';
+  }
+
+  /* UPI modal controls */
+  window.closeUpi = function(){ document.getElementById('upiBack').style.display='none' }
+  
+  /* Confirm manual payment: user uploads screenshot and clicks confirm */
+  window.confirmManualPayment = async function() {
+    const file = document.getElementById('upiScreenshot').files[0];
+    if (!file) {
+      document.getElementById('upiError').textContent = 'Please upload a UPI screenshot.';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const proofBase64 = e.target.result;
+      if (!currentOrder) {
+        // Use the celebration modal for a better UX
+        showCelebrationModal("Order information is missing. Please create a new order.");
+        closeUpi();
+        return;
+      }
+      
+      const orderRef = doc(db, `artifacts/${appId}/public/data/orders`, currentOrder.id);
+
+      try {
+        await addDoc(collection(db, `artifacts/${appId}/public/data/paymentProofs`), {
+          orderId: currentOrder.id,
+          proof: proofBase64,
+          time: new Date(),
+          userId: userId,
+        });
+        
+        closeUpi();
+        closeModal();
+        showCelebrationModal();
+
+      } catch (e) {
+        console.error("Error submitting payment proof: ", e);
+        // Use the celebration modal for a better UX
+        showCelebrationModal("Error submitting payment. Please try again.");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* Listen for real-time order updates */
+  function setupOrderListener() {
+    if (unsubscribeOrders) {
+      unsubscribeOrders();
+    }
+    const ordersCol = collection(db, `artifacts/${appId}/public/data/orders`);
+    const q = query(ordersCol, orderBy("time", "desc"), limit(6));
+    
+    unsubscribeOrders = onSnapshot(q, (querySnapshot) => {
+      const orders = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        orders.push({ id: doc.id, ...data });
+      });
+      renderOrderList(orders);
+    }, (error) => {
+      console.error("Error listening to orders:", error);
+    });
+  }
+
+  function renderOrderList(orders) {
+    const el = document.getElementById('orderList');
+    if (orders.length === 0) {
+      el.innerHTML = 'No recent orders.';
+      return;
+    }
+    el.innerHTML = orders.map(o => `
+      <div class="mb-2 p-2 rounded-lg bg-gray-800">
+        <div class="font-bold text-white">${o.id}</div>
+        <div class="text-sm muted">${o.product.name} x${o.qty} — ₹${o.payable}</div>
+        <div class="text-xs muted">UID: ${o.uid} | by ${o.userId}</div>
+        <div class="text-xs muted">${o.time.toDate().toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
+  
+  // Initial render and setup
+  document.getElementById('openCheckout').addEventListener('click', () => {
+    if (selected) showModal();
+  });
+  updateCartBar();
+</script>
+</body>
+</html>
